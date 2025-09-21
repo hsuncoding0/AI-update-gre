@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Repo Explorer</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <!-- highlight.js CDN for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>GitHub Repo Explorer</h1>
+
+    <div class="controls">
+      <input id="owner" placeholder="owner (e.g. torvalds)" />
+      <input id="repo" placeholder="repo (e.g. linux)" />
+      <input id="branch" placeholder="branch (optional)" />
+      <button id="loadBtn">Load</button>
+    </div>
+
+    <div class="main">
+      <div class="tree" id="tree"></div>
+      <div class="viewer" id="viewer"><pre><code id="code" class="hljs"></code></pre></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>hljs.highlightAll();</script>
+</body>
+</html>
