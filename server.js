@@ -244,6 +244,9 @@ app.get('/api/download', async (req, res) => {
     res.status(err.response ? err.response.status : 500).json({ error: message });
   }
 });
+app.get('/api-docs', (req, res) => {
+  res.sendFile(__dirname + '/public/api.html');
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
