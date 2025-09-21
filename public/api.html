@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>API 測試介面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-4xl mx-auto py-8 px-4">
+    <h1 class="text-3xl font-bold mb-6">📡 API 測試介面</h1>
+
+    <!-- Repo Tree 測試 -->
+    <div class="bg-white p-6 rounded-2xl shadow mb-6">
+      <h2 class="text-xl font-semibold mb-2">取得 Repo Tree</h2>
+      <label class="block mb-2">
+        Repository (user/repo):
+        <input id="repoInput" class="border p-2 w-full rounded" placeholder="octocat/Hello-World">
+      </label>
+      <button onclick="fetchTree()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        查詢
+      </button>
+      <pre id="treeResult" class="bg-gray-900 text-green-400 p-3 mt-4 rounded max-h-80 overflow-auto"></pre>
+    </div>
+
+    <!-- File 測試 -->
+    <div class="bg-white p-6 rounded-2xl shadow mb-6">
+      <h2 class="text-xl font-semibold mb-2">取得 File</h2>
+      <label class="block mb-2">
+        Repository (user/repo):
+        <input id="repoFileInput" class="border p-2 w-full rounded" placeholder="octocat/Hello-World">
+      </label>
+      <label class="block mb-2">
+        File Path:
+        <input id="pathInput" class="border p-2 w-full rounded" placeholder="README.md">
+      </label>
+      <button onclick="fetchFile()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        查詢
+      </button>
+      <pre id="fileResult" class="bg-gray-900 text-green-400 p-3 mt-4 rounded max-h-80 overflow-auto"></pre>
+    </div>
+
+    <!-- Streaming 測試 -->
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <h2 class="text-xl font-semibold mb-2">即時 Tree Streaming</h2>
+      <label class="block mb-2">
+        Repository (user/repo):
+        <input id="repoStreamInput" class="border p-2 w-full rounded" placeholder="octocat/Hello-World">
+      </label>
+      <button onclick="streamTree()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        開始 Streaming
+      </button>
+      <pre id="streamResult" class="bg-gray-900 text-green-400 p-3 mt-4 rounded max-h-80 overflow-auto"></pre>
+    </div>
+  </div>
+
+  <script>
+    async function fetchTree() {
+      const repo = document.getElementById('repoInput').value;
+      const res = await fetch(`/api/tree?repo=${repo}`);
+      document.getElementById('treeResult').textContent = JSON.stringify(await res.json(), null, 2);
+    }
+
+    async function fetchFile() {
+      const repo = document.getElementById('repoFileInput').value;
+      const path = document.getElementById('pathInput').value;
+      const res = await fetch(`/api/file?repo=${repo}&path=${path}`);
+      document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
+    }
+
+    function streamTree() {
+      const repo = document.getElementById('repoStreamInput').value;
+      const eventSource = new EventSource(`/api/stream/tree?repo=${repo}`);
+      const output = document.getElementById('streamResult');
+      output.textContent = '';
+      eventSource.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        output.textContent += JSON.stringify(data, null, 2) + '\n';
+      };
+      eventSource.onerror = () => {
+        output.textContent += '\n❌ 連線中斷';
+        eventSource.close();
+      };
+    }
+  </script>
+</body>
+</html>
