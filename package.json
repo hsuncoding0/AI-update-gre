@@ -1,17 +1,16 @@
 {
-  "name": "github-repo-explorer-advanced",
+  "name": "github-repo-explorer",
   "version": "2.0.0",
-  "description": "GitHub repo explorer with API docs, status tests, animations, and modern UI",
+  "description": "GitHub repo file explorer with API docs and animations",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": "^1.6.8",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "morgan": "^1.10.0",
-    "node-cache": "^5.1.2"
+    "marked": "^9.1.6"
   }
 }
