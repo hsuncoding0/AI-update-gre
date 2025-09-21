@@ -1,11 +1,9 @@
 {
-  "name": "github-repo-explorer-advanced",
-  "version": "2.0.0",
-  "description": "GitHub repo explorer + API docs + status test + animations",
+  "name": "github-repo-explorer-pro",
+  "version": "3.0.0",
+  "description": "GitHub Repo Explorer + API Docs + CodeMirror + Advanced UI",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "axios": "^1.4.0",
     "cors": "^2.8.5",
