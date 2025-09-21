@@ -55,33 +55,42 @@
   </div>
 
   <script>
-    async function fetchTree() {
-      const repo = document.getElementById('repoInput').value;
-      const res = await fetch(`/api/tree?repo=${repo}`);
-      document.getElementById('treeResult').textContent = JSON.stringify(await res.json(), null, 2);
-    }
+  function parseRepo(input) {
+    const [owner, repo] = input.split("/");
+    return { owner, repo };
+  }
 
-    async function fetchFile() {
-      const path = document.getElementById('pathInput').value;
-      const repo = document.getElementById('repoInput').value.trim();
-const res = await fetch(`/api/tree?repo=${encodeURIComponent(repo)}`);
-      document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
-    }
+  async function fetchTree() {
+    const input = document.getElementById('repoInput').value.trim();
+    const { owner, repo } = parseRepo(input);
+    const res = await fetch(`/api/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`);
+    document.getElementById('treeResult').textContent = JSON.stringify(await res.json(), null, 2);
+  }
 
-    function streamTree() {
-      const repo = document.getElementById('repoStreamInput').value;
-      const eventSource = new EventSource(`/api/stream/tree?repo=${repo}`);
-      const output = document.getElementById('streamResult');
-      output.textContent = '';
-      eventSource.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        output.textContent += JSON.stringify(data, null, 2) + '\n';
-      };
-      eventSource.onerror = () => {
-        output.textContent += '\n❌ 連線中斷';
-        eventSource.close();
-      };
-    }
-  </script>
+  async function fetchFile() {
+    const input = document.getElementById('repoFileInput').value.trim();
+    const path = document.getElementById('pathInput').value.trim();
+    const { owner, repo } = parseRepo(input);
+    const res = await fetch(`/api/file?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`);
+    document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
+  }
+
+  function streamTree() {
+    const input = document.getElementById('repoStreamInput').value.trim();
+    const { owner, repo } = parseRepo(input);
+    const eventSource = new EventSource(`/api/stream/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`);
+    const output = document.getElementById('streamResult');
+    output.textContent = '';
+    eventSource.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      output.textContent += JSON.stringify(data, null, 2) + '\n';
+    };
+    eventSource.onerror = () => {
+      output.textContent += '\n❌ 連線中斷';
+      eventSource.close();
+    };
+  }
+</script>
+
 </body>
 </html>
