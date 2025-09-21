@@ -52,6 +52,38 @@
       </button>
       <pre id="streamResult" class="bg-gray-900 text-green-400 p-3 mt-4 rounded max-h-80 overflow-auto"></pre>
     </div>
+    <!-- API 使用教學 -->
+<div class="bg-white p-6 rounded-2xl shadow mt-6">
+  <h2 class="text-xl font-semibold mb-4">📖 API 使用教學</h2>
+
+  <h3 class="font-semibold mb-1">1. 取得 Repo Tree</h3>
+  <p class="mb-2 text-gray-700">
+    URL 範例: <code class="bg-gray-200 px-1 py-0.5 rounded">/api/tree?owner=octocat&repo=Hello-World</code>
+  </p>
+  <button onclick="document.getElementById('repoInput').value='octocat/Hello-World'; fetchTree();" 
+          class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 mb-4">
+    將範例填入並查詢
+  </button>
+
+  <h3 class="font-semibold mb-1">2. 取得單一檔案</h3>
+  <p class="mb-2 text-gray-700">
+    URL 範例: <code class="bg-gray-200 px-1 py-0.5 rounded">/api/file?owner=octocat&repo=Hello-World&path=README.md</code>
+  </p>
+  <button onclick="document.getElementById('repoFileInput').value='octocat/Hello-World'; document.getElementById('pathInput').value='README.md'; fetchFile();" 
+          class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 mb-4">
+    將範例填入並查詢
+  </button>
+
+  <h3 class="font-semibold mb-1">3. 即時 Tree Streaming</h3>
+  <p class="mb-2 text-gray-700">
+    URL 範例: <code class="bg-gray-200 px-1 py-0.5 rounded">/api/stream/tree?owner=octocat&repo=Hello-World</code>
+  </p>
+  <button onclick="document.getElementById('repoStreamInput').value='octocat/Hello-World'; streamTree();" 
+          class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+    將範例填入並開始 Streaming
+  </button>
+</div>
+
   </div>
 
   <script>
