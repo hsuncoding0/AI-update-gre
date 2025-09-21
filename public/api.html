@@ -55,41 +55,60 @@
   </div>
 
   <script>
-  function parseRepo(input) {
-    const [owner, repo] = input.split("/");
-    return { owner, repo };
-  }
+async function fetchTree() {
+  const repo = document.getElementById('repoInput').value.trim();
+  const [owner, repoName] = repo.split('/');
+  if (!owner || !repoName) { alert('請輸入正確格式：user/repo'); return; }
+  const res = await fetch(`/api/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repoName)}`);
+  document.getElementById('treeResult').textContent = JSON.stringify(await res.json(), null, 2);
+}
 
-  async function fetchTree() {
-    const input = document.getElementById('repoInput').value.trim();
-    const { owner, repo } = parseRepo(input);
-    const res = await fetch(`/api/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`);
-    document.getElementById('treeResult').textContent = JSON.stringify(await res.json(), null, 2);
-  }
+async function fetchFile() {
+  const path = document.getElementById('pathInput').value.trim();
+  const repo = document.getElementById('repoFileInput').value.trim();
+  const [owner, repoName] = repo.split('/');
+  if (!owner || !repoName) { alert('請輸入正確格式：user/repo'); return; }
+  const res = await fetch(`/api/file?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repoName)}&path=${encodeURIComponent(path)}`);
+  document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
+}
 
-  async function fetchFile() {
-    const input = document.getElementById('repoFileInput').value.trim();
-    const path = document.getElementById('pathInput').value.trim();
-    const { owner, repo } = parseRepo(input);
-    const res = await fetch(`/api/file?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`);
-    document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
-  }
+function streamTree() {
+  const repo = document.getElementById('repoStreamInput').value.trim();
+  const [owner, repoName] = repo.split('/');
+  if (!owner || !repoName) { alert('請輸入正確格式：user/repo'); return; }
 
-  function streamTree() {
-    const input = document.getElementById('repoStreamInput').value.trim();
-    const { owner, repo } = parseRepo(input);
-    const eventSource = new EventSource(`/api/stream/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`);
-    const output = document.getElementById('streamResult');
-    output.textContent = '';
-    eventSource.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      output.textContent += JSON.stringify(data, null, 2) + '\n';
-    };
-    eventSource.onerror = () => {
-      output.textContent += '\n❌ 連線中斷';
-      eventSource.close();
-    };
-  }
+  const output = document.getElementById('streamResult');
+  output.textContent = '';
+
+  const es = new EventSource(`/api/stream/tree?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repoName)}`);
+  
+  es.addEventListener('progress', (e) => {
+    const data = JSON.parse(e.data);
+    output.textContent += `進度: ${data.percent}% - ${data.message}\n`;
+  });
+
+  es.addEventListener('chunk', (e) => {
+    const data = JSON.parse(e.data);
+    data.items.forEach(it => output.textContent += `${it.type}: ${it.path}\n`);
+  });
+
+  es.addEventListener('done', (e) => {
+    const data = JSON.parse(e.data);
+    output.textContent += `✅ 完成，共 ${data.tree.length} 個項目\n`;
+    es.close();
+  });
+
+  es.addEventListener('sse-error', (e) => {
+    const data = JSON.parse(e.data);
+    output.textContent += `❌ 錯誤: ${data.message}\n`;
+    es.close();
+  });
+
+  es.onerror = () => {
+    output.textContent += '\n❌ 連線中斷';
+    es.close();
+  };
+}
 </script>
 
 </body>
