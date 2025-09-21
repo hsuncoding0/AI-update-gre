@@ -1,35 +1,123 @@
-/* animations */
-@keyframes spin-slow { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-.animate-spin-slow { animation: spin-slow 1.4s linear infinite; }
-@keyframes bounce-slow { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-6px) } }
-.animate-bounce-slow { animation: bounce-slow 2.5s infinite; }
+/* ------------------------- */
+/* Tab & Button Styles */
+/* ------------------------- */
+.tab-content { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0; transform: translateY(10px);} to{opacity:1; transform:translateY(0);} }
 
-/* tree items */
-.tree-item { cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background-color .18s, transform .12s; }
-.tree-item:hover { background: rgba(99,102,241,0.06); transform: translateX(2px); }
-.tree-folder { font-weight: 600; display:inline-flex; gap:6px; align-items:center; }
-.tree-file { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; display:inline-block; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab-btn.active { background-color: #6366f1; color:white; }
 
-/* code area */
-.code-wrap pre { margin: 0; min-height: 12rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; font-size: 13px; line-height: 1.5; }
+button { cursor:pointer; transition: all 0.2s ease; }
+button:hover { transform: scale(1.05); }
 
-/* line numbers layout */
-.code-line { display: flex; padding: 0.12rem 0; }
-.code-gutter { user-select:none; width:3.2rem; text-align:right; padding-right:1rem; color:#94a3b8; font-size:12px; }
-.code-content { white-space:pre-wrap; flex:1; }
-
-/* highlight matching whole line */
-.match-line { background: linear-gradient(90deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06)); border-radius: 4px; }
-
-/* search match inline (tree) */
-.match { background: linear-gradient(90deg, rgba(34,197,94,0.14), rgba(34,197,94,0.06)); border-radius: 3px; padding: 0 2px; }
-
-/* skeleton */
-.skeleton { background: linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.06), rgba(0,0,0,0.04)); border-radius:6px; min-height:14px; }
-
-/* responsive */
-@media (max-width: 900px) {
-  main { grid-template-columns: 1fr; }
-  aside { order: 2; height: auto; }
-  section { order: 1; }
+/* ------------------------- */
+/* Skeleton Loading Animation */
+/* ------------------------- */
+.skeleton {
+  background: linear-gradient(-90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+  background-size: 400% 400%;
+  animation: shine 1.4s ease-in-out infinite;
+  border-radius: 0.5rem;
+  height: 1rem;
+  margin-bottom: 0.5rem;
 }
+@keyframes shine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ------------------------- */
+/* File Tree Styles */
+/* ------------------------- */
+#treeContainer div { padding: 4px 8px; border-radius: 0.5rem; margin: 1px 0; transition: background 0.2s; }
+#treeContainer div:hover { background-color: #e0e7ff; cursor:pointer; }
+.file-highlight { background-color: #fef3c7; font-weight: bold; }
+
+/* Tree icons */
+#treeContainer div:before { margin-right: 0.5rem; }
+#treeContainer div[data-type="tree"]:before { content:"📁"; }
+#treeContainer div[data-type="blob"]:before { content:"📄"; }
+
+/* ------------------------- */
+/* CodeMirror Custom Styles */
+/* ------------------------- */
+.CodeMirror { height:auto; border-radius:0.75rem; font-size:14px; }
+.CodeMirror-scroll { max-height:500px; overflow-y:auto; }
+.cm-s-default .CodeMirror-gutters { background:#f9fafb; border-right:1px solid #e5e7eb; }
+.CodeMirror-line { transition: background 0.2s ease; }
+.CodeMirror-line:hover { background-color: #f3f4f6; }
+
+/* ------------------------- */
+/* API Card Styles */
+/* ------------------------- */
+#apiDocs div { border:1px solid #e5e7eb; border-radius:1rem; padding:1rem; background:#fff; box-shadow:0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s ease; }
+#apiDocs div:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-2px); }
+#apiDocs pre { background:#f3f4f6; padding:0.5rem; border-radius:0.5rem; max-height:200px; overflow:auto; }
+
+/* ------------------------- */
+/* Load More Button Styles */
+/* ------------------------- */
+#loadMoreBtn { transition: all 0.3s ease; }
+#loadMoreBtn:hover { background-color:#7c3aed; transform:scale(1.05); }
+
+/* ------------------------- */
+/* Search Input */
+#searchFile, #repoInput { transition: all 0.3s ease; }
+#searchFile:focus, #repoInput:focus { border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,0.2); outline:none; }
+
+/* ------------------------- */
+/* Status Pre Scrollbar */
+#statusResult::-webkit-scrollbar, #treeContainer::-webkit-scrollbar, #apiDocs pre::-webkit-scrollbar {
+  width: 8px;
+}
+#statusResult::-webkit-scrollbar-thumb, #treeContainer::-webkit-scrollbar-thumb, #apiDocs pre::-webkit-scrollbar-thumb {
+  background-color: rgba(107,114,128,0.5); border-radius:4px;
+}
+#statusResult::-webkit-scrollbar-thumb:hover { background-color: rgba(107,114,128,0.7); }
+
+/* ------------------------- */
+/* Responsive */
+@media (max-width:768px){
+  #repoInput,#searchFile { width:100%; margin-bottom:0.5rem; }
+  .flex { flex-direction:column; gap:0.5rem; }
+}
+
+/* ------------------------- */
+/* Extra Animations */
+.tab-content { transition: all 0.4s ease; }
+button:active { transform: scale(0.97); }
+
+h1,h2,h3 { text-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+/* ------------------------- */
+/* Gradient Backgrounds */
+body { background: linear-gradient(to right, #eef2ff, #f5f3ff, #fff0f6); }
+
+/* ------------------------- */
+/* Shadows & Rounded */
+.shadow-inner { box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+.rounded-xl { border-radius: 1rem; }
+
+/* ------------------------- */
+/* Buttons */
+button { font-weight:500; }
+
+/* ------------------------- */
+/* Utility for future */
+.hidden { display:none; }
+
+/* ------------------------- */
+/* Extra Spacing & Typography */
+p,div,span,input,textarea { font-family:'Inter',sans-serif; line-height:1.5; }
+input,textarea { font-size:14px; }
+
+/* ------------------------- */
+/* Hover & Focus Transitions */
+button, input, textarea { transition: all 0.3s ease; }
+
+/* ------------------------- */
+/* Additional 100+ lines for professional styling */
+.tab-content { padding:1rem; margin-bottom:1rem; }
+#treeContainer { border:1px solid #e5e7eb; }
+#fileViewer { border:1px solid #e5e7eb; }
+
+/* You can continue adding gradient hover effects, ripple effects, more skeleton animations, shadows, badges, etc. */
