@@ -62,9 +62,9 @@
     }
 
     async function fetchFile() {
-      const repo = document.getElementById('repoFileInput').value;
       const path = document.getElementById('pathInput').value;
-      const res = await fetch(`/api/file?repo=${repo}&path=${path}`);
+      const repo = document.getElementById('repoInput').value.trim();
+const res = await fetch(`/api/tree?repo=${encodeURIComponent(repo)}`);
       document.getElementById('fileResult').textContent = JSON.stringify(await res.json(), null, 2);
     }
 
