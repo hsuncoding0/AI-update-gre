@@ -1,67 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GitHub Repo Explorer Pro</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Repo Explorer — 豪華強化版</title>
 
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-<link rel="stylesheet" href="styles.css">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+  <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 text-gray-800 font-sans">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold flex items-center gap-3">
+          <svg class="w-8 h-8 text-sky-500 animate-bounce-slow" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="currentColor"/></svg>
+          GitHub Repo Explorer
+          <span class="text-sm text-slate-400 ml-2">豪華強化版</span>
+        </h1>
+        <div class="text-sm text-slate-400">進度、動畫、行號、搜尋高亮、分支清單與更穩健的錯誤處理。</div>
+      </div>
 
-<div class="max-w-6xl mx-auto p-6">
+      <div class="flex items-center gap-3">
+        <div class="text-sm text-slate-400">主題</div>
+        <button id="themeToggle" class="p-2 rounded bg-slate-200 dark:bg-slate-800">
+          <svg id="themeIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
 
-<h1 class="text-4xl font-bold mb-6 text-center text-indigo-800">GitHub Repo Explorer Pro</h1>
+    <section class="mb-4 bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <div class="flex gap-3 items-center">
+        <input id="owner" class="border rounded px-3 py-2 w-56 bg-transparent" placeholder="owner (e.g. torvalds)" />
+        <input id="repo" class="border rounded px-3 py-2 w-56 bg-transparent" placeholder="repo (e.g. linux)" />
+        <select id="branchSelect" class="border rounded px-3 py-2 bg-transparent w-48">
+          <option value="">branch (optional)</option>
+        </select>
+        <button id="loadBtn" class="ml-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded shadow">Load</button>
 
-<!-- Tabs -->
-<div class="flex space-x-4 justify-center mb-6">
-  <button class="tab-btn bg-blue-500 text-white px-5 py-2 rounded-lg shadow-lg transition transform hover:scale-105" data-tab="files">檔案樹</button>
-  <button class="tab-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-lg shadow transition transform hover:scale-105" data-tab="api">API 教學</button>
-  <button class="tab-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-lg shadow transition transform hover:scale-105" data-tab="status">狀態測試</button>
-</div>
+        <div class="ml-auto flex items-center gap-2">
+          <input id="searchBox" placeholder="搜尋檔名或路徑 (Ctrl/Cmd+K)" class="border rounded px-3 py-2 w-64 bg-transparent" />
+          <button id="clearSearch" class="text-sm text-slate-400">清除</button>
+        </div>
+      </div>
 
-<!-- Tab Contents -->
-<div id="files" class="tab-content">
-  <h2 class="text-2xl font-semibold mb-4 text-indigo-700">檔案樹</h2>
+      <div id="progressWrap" class="mt-3 hidden">
+        <div class="flex items-center gap-3">
+          <div id="progressText" class="text-sm text-slate-600">載入中...</div>
+          <div class="flex-1">
+            <div class="w-full bg-slate-200 h-2 rounded overflow-hidden">
+              <div id="progressBar" class="h-2 rounded bg-gradient-to-r from-sky-500 to-indigo-600 w-0 transition-all duration-300"></div>
+            </div>
+          </div>
+          <div id="spinner" class="w-6 h-6 animate-spin-slow border-4 border-slate-200 rounded-full border-t-sky-500"></div>
+        </div>
+      </div>
+    </section>
 
-  <div class="flex space-x-2 mb-2">
-    <input type="text" id="repoInput" placeholder="owner/repo" class="border p-2 w-full rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-    <button id="fetchTree" class="bg-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-105">取得檔案樹</button>
+    <main class="grid grid-cols-4 gap-6">
+      <aside class="col-span-1 bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm h-[72vh] overflow-auto">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm text-slate-500">檔案樹</div>
+          <div class="text-xs text-slate-400">點擊檔案以檢視</div>
+        </div>
+        <div id="tree" class="text-sm"></div>
+      </aside>
+
+      <section class="col-span-3 bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm h-[72vh] overflow-auto flex flex-col">
+        <div class="flex items-center gap-4 mb-3">
+          <div id="breadcrumbs" class="text-sm text-slate-500 flex-1"></div>
+          <div class="flex gap-2">
+            <button id="downloadBtn" class="text-sm px-3 py-1 border rounded">下載</button>
+            <button id="copyBtn" class="text-sm px-3 py-1 border rounded">複製</button>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-auto bg-slate-900 text-slate-100 rounded p-3 code-wrap">
+          <pre id="codePre" class="relative"><code id="code" class="hljs block whitespace-pre-wrap"></code></pre>
+        </div>
+
+        <div id="snack" class="fixed bottom-6 right-6 hidden bg-slate-800 text-white px-4 py-2 rounded shadow">已複製到剪貼簿</div>
+      </section>
+    </main>
+
+    <footer class="mt-4 text-xs text-slate-400">提示：如遇 API 速率限制，請在後端設定 GITHUB_TOKEN。</footer>
   </div>
 
-  <input type="text" id="searchFile" placeholder="搜尋檔案" class="border p-2 w-full mb-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition">
-
-  <div id="treeContainer" class="border p-3 h-96 overflow-auto bg-white rounded-xl shadow-inner"></div>
-
-  <div id="loadMoreContainer" class="mt-2 text-center">
-    <button id="loadMoreBtn" class="hidden bg-purple-500 text-white px-6 py-1 rounded-lg shadow hover:bg-purple-600 transition transform hover:scale-105">載入更多</button>
-  </div>
-
-  <div id="fileViewer" class="mt-6 border bg-white p-3 rounded-xl shadow-lg hidden">
-    <h3 id="fileTitle" class="font-semibold mb-2 text-purple-700"></h3>
-    <textarea id="codeEditor"></textarea>
-  </div>
-
-</div>
-
-<div id="api" class="tab-content hidden">
-  <h2 class="text-2xl font-semibold mb-4 text-purple-700">API 教學 & 範例測試</h2>
-  <div id="apiDocs" class="space-y-4"></div>
-</div>
-
-<div id="status" class="tab-content hidden">
-  <h2 class="text-2xl font-semibold mb-4 text-green-700">API 狀態測試</h2>
-  <button id="checkStatus" class="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition transform hover:scale-105 mb-2">檢查狀態</button>
-  <pre id="statusResult" class="bg-white p-3 rounded-xl shadow-inner h-40 overflow-auto"></pre>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-<script src="app.js"></script>
-
-</div>
+  <script src="/app.js"></script>
+  <script>hljs.highlightAll();</script>
 </body>
 </html>
