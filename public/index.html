@@ -3,41 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GitHub Repo Explorer + API Docs</title>
+<title>GitHub Repo Explorer Pro</title>
+
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
 <link rel="stylesheet" href="styles.css">
+
 </head>
-<body class="bg-gray-50 text-gray-800">
-<div class="max-w-6xl mx-auto p-4">
-  <h1 class="text-3xl font-bold mb-4">GitHub Repo Explorer + API Docs</h1>
+<body class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 text-gray-800 font-sans">
 
-  <!-- Tabs -->
-  <div class="flex space-x-4 mb-4">
-    <button class="tab-btn bg-blue-500 text-white px-4 py-2 rounded" data-tab="files">檔案樹</button>
-    <button class="tab-btn bg-gray-200 text-gray-700 px-4 py-2 rounded" data-tab="api">API 教學</button>
-    <button class="tab-btn bg-gray-200 text-gray-700 px-4 py-2 rounded" data-tab="status">狀態測試</button>
-  </div>
+<div class="max-w-6xl mx-auto p-6">
 
-  <!-- Tab Contents -->
-  <div id="files" class="tab-content">
-    <h2 class="text-xl font-semibold mb-2">檔案樹</h2>
-    <input type="text" id="repoInput" placeholder="owner/repo" class="border p-2 w-full mb-2">
-    <button id="fetchTree" class="bg-blue-500 text-white px-4 py-2 rounded mb-2 hover:bg-blue-600">取得檔案樹</button>
-    <div id="treeContainer" class="border p-2 h-80 overflow-auto bg-white rounded shadow"></div>
-  </div>
+<h1 class="text-4xl font-bold mb-6 text-center text-indigo-800">GitHub Repo Explorer Pro</h1>
 
-  <div id="api" class="tab-content hidden">
-    <h2 class="text-xl font-semibold mb-2">API 教學 & 範例測試</h2>
-    <div id="apiDocs" class="space-y-4"></div>
-  </div>
-
-  <div id="status" class="tab-content hidden">
-    <h2 class="text-xl font-semibold mb-2">API 狀態測試</h2>
-    <button id="checkStatus" class="bg-green-500 text-white px-4 py-2 rounded mb-2 hover:bg-green-600">檢查狀態</button>
-    <pre id="statusResult" class="bg-white p-2 rounded shadow h-40 overflow-auto"></pre>
-  </div>
+<!-- Tabs -->
+<div class="flex space-x-4 justify-center mb-6">
+  <button class="tab-btn bg-blue-500 text-white px-5 py-2 rounded-lg shadow-lg transition transform hover:scale-105" data-tab="files">檔案樹</button>
+  <button class="tab-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-lg shadow transition transform hover:scale-105" data-tab="api">API 教學</button>
+  <button class="tab-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-lg shadow transition transform hover:scale-105" data-tab="status">狀態測試</button>
 </div>
 
+<!-- Tab Contents -->
+<div id="files" class="tab-content">
+  <h2 class="text-2xl font-semibold mb-4 text-indigo-700">檔案樹</h2>
+
+  <div class="flex space-x-2 mb-2">
+    <input type="text" id="repoInput" placeholder="owner/repo" class="border p-2 w-full rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
+    <button id="fetchTree" class="bg-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-105">取得檔案樹</button>
+  </div>
+
+  <input type="text" id="searchFile" placeholder="搜尋檔案" class="border p-2 w-full mb-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition">
+
+  <div id="treeContainer" class="border p-3 h-96 overflow-auto bg-white rounded-xl shadow-inner"></div>
+
+  <div id="loadMoreContainer" class="mt-2 text-center">
+    <button id="loadMoreBtn" class="hidden bg-purple-500 text-white px-6 py-1 rounded-lg shadow hover:bg-purple-600 transition transform hover:scale-105">載入更多</button>
+  </div>
+
+  <div id="fileViewer" class="mt-6 border bg-white p-3 rounded-xl shadow-lg hidden">
+    <h3 id="fileTitle" class="font-semibold mb-2 text-purple-700"></h3>
+    <textarea id="codeEditor"></textarea>
+  </div>
+
+</div>
+
+<div id="api" class="tab-content hidden">
+  <h2 class="text-2xl font-semibold mb-4 text-purple-700">API 教學 & 範例測試</h2>
+  <div id="apiDocs" class="space-y-4"></div>
+</div>
+
+<div id="status" class="tab-content hidden">
+  <h2 class="text-2xl font-semibold mb-4 text-green-700">API 狀態測試</h2>
+  <button id="checkStatus" class="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition transform hover:scale-105 mb-2">檢查狀態</button>
+  <pre id="statusResult" class="bg-white p-3 rounded-xl shadow-inner h-40 overflow-auto"></pre>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
 <script src="app.js"></script>
+
+</div>
 </body>
 </html>
