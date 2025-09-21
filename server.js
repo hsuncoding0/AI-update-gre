@@ -23,22 +23,52 @@ const ghAxios = axios.create({
   timeout: 20000,
 });
 
-// simple LRU cache for trees and file contents
 const cache = new LRU({ max: 1000, ttl: CACHE_TTL });
 
 function sendSse(res, event, data){
-  res.write(`event: ${event}\n`);
-  res.write(`data: ${JSON.stringify(data)}\n\n`);
+  try {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  } catch (e){
+    // client disconnected
+  }
 }
 
-// SSE: stream tree with progress and chunks
+function rateLimitMessage(err){
+  if (err.response && err.response.status === 403){
+    const h = err.response.headers || {};
+    const remain = h['x-ratelimit-remaining'];
+    const reset = h['x-ratelimit-reset'];
+    if (remain === '0' && reset){
+      const resetDate = new Date(parseInt(reset,10)*1000);
+      return `GitHub API rate limit exceeded. Reset at ${resetDate.toLocaleString()}.`;
+    }
+    return err.response.data && err.response.data.message ? err.response.data.message : 'Forbidden (403)';
+  }
+  return null;
+}
+
+// get branches for a repo
+app.get('/api/branches', async (req, res) => {
+  const { owner, repo } = req.query;
+  if (!owner || !repo) return res.status(400).json({ error: 'owner and repo required' });
+  try {
+    const resp = await ghAxios.get(`/repos/${owner}/${repo}/branches?per_page=100`);
+    const names = resp.data.map(b=>b.name);
+    res.json({ branches: names });
+  } catch (err) {
+    const msg = rateLimitMessage(err) || (err.response && err.response.data && err.response.data.message) || err.message;
+    res.status(err.response ? err.response.status : 500).json({ error: msg });
+  }
+});
+
+// stream tree with progress + chunked items
 app.get('/api/stream/tree', async (req, res) => {
   const { owner, repo, branch } = req.query;
   if (!owner || !repo){
     res.status(400).json({ error: 'owner and repo are required' });
     return;
   }
-
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.flushHeaders();
@@ -54,13 +84,11 @@ app.get('/api/stream/tree', async (req, res) => {
   try {
     sendSse(res, 'progress', { percent: 5, message: 'fetching tree from GitHub' });
     const ref = branch || 'HEAD';
-
-    // Try direct tree first; might fail if ref isn't a tree
     let treeResp;
     try {
       treeResp = await ghAxios.get(`/repos/${owner}/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
     } catch (err) {
-      // fallback: resolve branch to commit sha then fetch tree
+      // fallback: try resolve branch then its commit sha
       const branchName = branch || 'main';
       const branchResp = await ghAxios.get(`/repos/${owner}/${repo}/branches/${encodeURIComponent(branchName)}`);
       const commitSha = branchResp.data.commit.sha;
@@ -69,7 +97,7 @@ app.get('/api/stream/tree', async (req, res) => {
 
     const tree = treeResp.data.tree || [];
     const total = tree.length;
-    const chunkSize = Math.max(50, Math.ceil(total / 12));
+    const chunkSize = Math.max(60, Math.ceil(total / 12));
     let sent = 0;
     const staged = [];
     for (let i=0;i<total;i++){
@@ -78,34 +106,33 @@ app.get('/api/stream/tree', async (req, res) => {
         sent += staged.length;
         const percent = Math.min(99, Math.round((sent/total) * 100));
         sendSse(res, 'progress', { percent, message: 'processing', count: sent, total });
+        // send minimal metadata to client
         sendSse(res, 'chunk', { items: staged.map(it=>({ path: it.path, type: it.type, size: it.size || 0 })) });
         staged.length = 0;
-        // small delay non-blocking
         await new Promise(r=>setTimeout(r, 40));
       }
     }
 
     const minimalTree = tree.map(it=>({ path: it.path, type: it.type, sha: it.sha, size: it.size || 0 }));
     cache.set(cacheKey, minimalTree);
-
     sendSse(res, 'progress', { percent: 100, message: 'done', total });
     sendSse(res, 'done', { tree: minimalTree });
     res.end();
   } catch (err) {
-    const msg = err.response && err.response.data ? err.response.data.message : err.message;
-    sendSse(res, 'error', { message: msg });
+    const rlMsg = rateLimitMessage(err);
+    const message = rlMsg || (err.response && err.response.data && err.response.data.message) || err.message;
+    sendSse(res, 'sse-error', { message, status: err.response ? err.response.status : 500 });
     res.end();
   }
 });
 
-// SSE: stream file fetch + decode
+// stream file
 app.get('/api/stream/file', async (req, res) => {
   const { owner, repo, path: filePath, ref } = req.query;
   if (!owner || !repo || !filePath){
     res.status(400).json({ error: 'owner, repo and path are required' });
     return;
   }
-
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.flushHeaders();
@@ -125,7 +152,6 @@ app.get('/api/stream/file', async (req, res) => {
     const resp = await ghAxios.get(`/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}${q}`);
     const contentBase64 = resp.data.content || '';
     const encoding = resp.data.encoding || 'base64';
-
     sendSse(res, 'progress', { percent: 50, message: 'decoding content', size: resp.data.size });
 
     let content = null;
@@ -134,21 +160,20 @@ app.get('/api/stream/file', async (req, res) => {
     } else {
       content = contentBase64;
     }
-
     const fileObj = { path: resp.data.path, content, size: resp.data.size };
     cache.set(cacheKey, fileObj);
-
     sendSse(res, 'progress', { percent: 100, message: 'done', size: resp.data.size });
     sendSse(res, 'done', { file: fileObj });
     res.end();
   } catch (err) {
-    const msg = err.response && err.response.data ? err.response.data.message : err.message;
-    sendSse(res, 'error', { message: msg });
+    const rlMsg = rateLimitMessage(err);
+    const message = rlMsg || (err.response && err.response.data && err.response.data.message) || err.message;
+    sendSse(res, 'sse-error', { message, status: err.response ? err.response.status : 500 });
     res.end();
   }
 });
 
-// REST fallback: tree
+// fallback REST endpoints
 app.get('/api/tree', async (req, res) => {
   try {
     const { owner, repo, branch } = req.query;
@@ -170,13 +195,12 @@ app.get('/api/tree', async (req, res) => {
     cache.set(cacheKey, minimalTree);
     res.json({ tree: minimalTree });
   } catch (err) {
-    const status = err.response ? err.response.status : 500;
-    const message = err.response && err.response.data ? err.response.data.message : err.message;
-    res.status(status).json({ error: message });
+    const rlMsg = rateLimitMessage(err);
+    const message = rlMsg || (err.response && err.response.data && err.response.data.message) || err.message;
+    res.status(err.response ? err.response.status : 500).json({ error: message });
   }
 });
 
-// REST fallback: file
 app.get('/api/file', async (req, res) => {
   try {
     const { owner, repo, path: filePath, ref } = req.query;
@@ -194,13 +218,13 @@ app.get('/api/file', async (req, res) => {
     cache.set(cacheKey, fileObj);
     res.json(fileObj);
   } catch (err) {
-    const status = err.response ? err.response.status : 500;
-    const message = err.response && err.response.data ? err.response.data.message : err.message;
-    res.status(status).json({ error: message });
+    const rlMsg = rateLimitMessage(err);
+    const message = rlMsg || (err.response && err.response.data && err.response.data.message) || err.message;
+    res.status(err.response ? err.response.status : 500).json({ error: message });
   }
 });
 
-// download raw file (proxy)
+// download raw file
 app.get('/api/download', async (req, res) => {
   try {
     const { owner, repo, path: filePath, ref } = req.query;
@@ -215,9 +239,9 @@ app.get('/api/download', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
     res.send(content);
   } catch (err) {
-    const status = err.response ? err.response.status : 500;
-    const message = err.response && err.response.data ? err.response.data.message : err.message;
-    res.status(status).json({ error: message });
+    const rlMsg = rateLimitMessage(err);
+    const message = rlMsg || (err.response && err.response.data && err.response.data.message) || err.message;
+    res.status(err.response ? err.response.status : 500).json({ error: message });
   }
 });
 
