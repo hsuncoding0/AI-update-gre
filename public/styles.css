@@ -1,25 +1,33 @@
-/* small custom styles and animations */
+/* animations */
 @keyframes spin-slow { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
 .animate-spin-slow { animation: spin-slow 1.4s linear infinite; }
 @keyframes bounce-slow { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-6px) } }
 .animate-bounce-slow { animation: bounce-slow 2.5s infinite; }
 
-.tree-item { cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background-color .18s, transform .15s; }
+/* tree items */
+.tree-item { cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background-color .18s, transform .12s; }
 .tree-item:hover { background: rgba(99,102,241,0.06); transform: translateX(2px); }
 .tree-folder { font-weight: 600; display:inline-flex; gap:6px; align-items:center; }
 .tree-file { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; display:inline-block; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* code area */
 .code-wrap pre { margin: 0; min-height: 12rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; font-size: 13px; line-height: 1.5; }
 
-/* line numbers column */
-.code-line { display: flex; }
+/* line numbers layout */
+.code-line { display: flex; padding: 0.12rem 0; }
 .code-gutter { user-select:none; width:3.2rem; text-align:right; padding-right:1rem; color:#94a3b8; font-size:12px; }
 .code-content { white-space:pre-wrap; flex:1; }
 
-/* highlight matching text */
-.match { background: linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08)); border-radius: 3px; padding: 0 2px; }
+/* highlight matching whole line */
+.match-line { background: linear-gradient(90deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06)); border-radius: 4px; }
 
-/* small responsive */
+/* search match inline (tree) */
+.match { background: linear-gradient(90deg, rgba(34,197,94,0.14), rgba(34,197,94,0.06)); border-radius: 3px; padding: 0 2px; }
+
+/* skeleton */
+.skeleton { background: linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.06), rgba(0,0,0,0.04)); border-radius:6px; min-height:14px; }
+
+/* responsive */
 @media (max-width: 900px) {
   main { grid-template-columns: 1fr; }
   aside { order: 2; height: auto; }
